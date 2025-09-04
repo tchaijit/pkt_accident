@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 ระบบวิเคราะห์ข้อมูลอุบัติเหตุ - ภูเก็ต</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>">
+    <link href="./style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="title-section">
+                    <h1><i class="fas fa-ambulance"></i> ระบบวิเคราะห์ข้อมูลอุบัติเหตุ</h1>
+                    <p>ศูนย์อุบัติเหตุและภาวะฉุกเฉิน รพ.วชิระภูเก็ต</p>
+                </div>
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-btn active" data-view="overview">
+                <i class="fas fa-chart-bar"></i> ภาพรวม
+            </button>
+            <button class="nav-btn" data-view="trends">
+                <i class="fas fa-chart-line"></i> แนวโน้ม
+            </button>
+            <button class="nav-btn" data-view="forecast">
+                <i class="fas fa-crystal-ball"></i> พยากรณ์
+            </button>
+            <button class="nav-btn" data-view="patterns">
+                <i class="fas fa-search"></i> วิเคราะห์เชิงลึก
+            </button>
+            <button class="nav-btn" data-view="causes">
+                <i class="fas fa-exclamation-triangle"></i> สาเหตุ
+            </button>
+            <button class="nav-btn" data-view="timeline">
+                <i class="fas fa-calendar"></i> ช่วงเวลา
+            </button>
+            <button class="nav-btn" data-view="reports">
+                <i class="fas fa-file-alt"></i> รายงาน
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="view-section active">
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-car-crash"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>รวมอุบัติเหตุ</h3>
+                            <p class="stat-number" id="total-accidents">-</p>
+                            <span class="stat-label">ครั้ง</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-skull"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>รวมเสียชีวิต</h3>
+                            <p class="stat-number" id="total-deaths">-</p>
+                            <span class="stat-label">คน</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-wine-glass"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>ดื่มแล้วขับ</h3>
+                            <p class="stat-number" id="drink-driving">-</p>
+                            <span class="stat-label">ครั้ง</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-injured"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>ผู้ป่วย Admit</h3>
+                            <p class="stat-number" id="admit-cases">-</p>
+                            <span class="stat-label">ครั้ง</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card secondary">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>อัตราเสียชีวิต</h3>
+                            <p class="stat-number" id="death-rate">-</p>
+                            <span class="stat-label">%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card accent">
+                        <div class="stat-icon">
+                            <i class="fas fa-child"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>อายุ < 20 ปี</h3>
+                            <p class="stat-number" id="youth-cases">-</p>
+                            <span class="stat-label">ครั้ง</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-pie"></i> สัดส่วนสาเหตุหลัก</h3>
+                        <canvas id="causesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-area"></i> แนวโน้ม 30 วันล่าสุด</h3>
+                        <canvas id="recentTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trends Section -->
+            <section id="trends" class="view-section">
+                <div class="chart-container full-width">
+                    <h3><i class="fas fa-chart-line"></i> แนวโน้มอุบัติเหตุรายวัน</h3>
+                    <canvas id="dailyTrendChart"></canvas>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3><i class="fas fa-wine-glass"></i> แนวโน้มดื่มแล้วขับ</h3>
+                        <canvas id="drinkTrendChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3><i class="fas fa-hospital"></i> แนวโน้ม EMS และ Admit</h3>
+                        <canvas id="emsTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Causes Section -->
+            <section id="causes" class="view-section">
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3><i class="fas fa-exclamation-triangle"></i> สาเหตุการบาดเจ็บ</h3>
+                        <canvas id="injuryCausesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3><i class="fas fa-shield-alt"></i> อุปกรณ์ความปลอดภัย</h3>
+                        <canvas id="safetyChart"></canvas>
+                    </div>
+                </div>
+                <div class="safety-stats">
+                    <div class="safety-card">
+                        <h4><i class="fas fa-hard-hat"></i> ไม่สวมหมวก</h4>
+                        <p class="big-number" id="no-helmet-count">-</p>
+                        <span class="percentage" id="no-helmet-percent">-%</span>
+                    </div>
+                    <div class="safety-card">
+                        <h4><i class="fas fa-user-shield"></i> ไม่คาดเข็มขัด</h4>
+                        <p class="big-number" id="no-seatbelt-count">-</p>
+                        <span class="percentage" id="no-seatbelt-percent">-%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Forecast Section -->
+            <section id="forecast" class="view-section">
+                <div class="forecast-controls">
+                    <h3><i class="fas fa-crystal-ball"></i> การพยากรณ์อุบัติเหตุ</h3>
+                    <div class="control-group">
+                        <label for="forecast-days">จำนวนวันที่ต้องการพยากรณ์:</label>
+                        <select id="forecast-days" onchange="loadForecast()">
+                            <option value="7">7 วัน</option>
+                            <option value="14">14 วัน</option>
+                            <option value="30">30 วัน</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="chart-container full-width">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+                
+                <div class="forecast-summary">
+                    <div class="forecast-card">
+                        <h4><i class="fas fa-chart-line"></i> การพยากรณ์</h4>
+                        <div id="forecast-stats"></div>
+                    </div>
+                    <div class="forecast-card">
+                        <h4><i class="fas fa-exclamation-circle"></i> คำเตือน</h4>
+                        <div id="forecast-warnings"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Patterns Section -->
+            <section id="patterns" class="view-section">
+                <h3><i class="fas fa-search"></i> การวิเคราะห์เชิงลึก</h3>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h4><i class="fas fa-calendar-week"></i> รูปแบบตามวันในสัปดาห์</h4>
+                        <canvas id="dayPatternsChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4><i class="fas fa-thermometer-half"></i> แนวโน้มตามฤดูกาล</h4>
+                        <canvas id="seasonalChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container full-width">
+                    <h4><i class="fas fa-project-diagram"></i> การวิเคราะห์ความสัมพันธ์ (Correlation)</h4>
+                    <canvas id="correlationChart"></canvas>
+                </div>
+                
+                <div class="chart-container full-width">
+                    <h4><i class="fas fa-shield-alt"></i> คะแนนความเสี่ยง (Risk Score)</h4>
+                    <canvas id="riskScoreChart"></canvas>
+                </div>
+                
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h4><i class="fas fa-th"></i> Heatmap: รูปแบบอุบัติเหตุ</h4>
+                        <canvas id="heatmapChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4><i class="fas fa-dot-circle"></i> Scatter: ความรุนแรง vs จำนวน</h4>
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="risk-summary">
+                    <div class="risk-card high">
+                        <h5><i class="fas fa-exclamation-triangle"></i> วันที่มีความเสี่ยงสูง</h5>
+                        <div id="high-risk-days"></div>
+                    </div>
+                    <div class="risk-card medium">
+                        <h5><i class="fas fa-warning"></i> วันที่มีความเสี่ยงปานกลาง</h5>
+                        <div id="medium-risk-days"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Timeline Section -->
+            <section id="timeline" class="view-section">
+                <div class="chart-container full-width">
+                    <h3><i class="fas fa-calendar"></i> สถิติรายเดือน</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+                <div class="timeline-stats">
+                    <div class="period-info">
+                        <h4><i class="fas fa-info-circle"></i> ข้อมูลระยะเวลา</h4>
+                        <p id="date-range">-</p>
+                        <p id="total-days">-</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="view-section">
+                <div class="report-container">
+                    <h3><i class="fas fa-file-alt"></i> รายงานสรุป</h3>
+                    <div class="report-content" id="report-content">
+                        <!-- Report content will be generated here -->
+                    </div>
+                    <button class="export-btn" onclick="exportReport()">
+                        <i class="fas fa-download"></i> ดาวน์โหลดรายงาน
+                    </button>
+                </div>
+                
+                <div class="data-table-container">
+                    <h3><i class="fas fa-table"></i> ตารางข้อมูลรายเดือน</h3>
+                    <div class="table-wrapper">
+                        <table id="monthly-table" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>เดือน</th>
+                                    <th>รวมอุบัติเหตุ</th>
+                                    <th>เสียชีวิต</th>
+                                    <th>ดื่มแล้วขับ</th>
+                                    <th>Admit</th>
+                                    <th>ไม่สวมหมวก</th>
+                                    <th>ไม่คาดเข็มขัด</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
