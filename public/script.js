@@ -53,10 +53,13 @@ async function loadData() {
     try {
         // Load summary data
         const summaryResponse = await fetch('/api/summary');
-        summaryData = await summaryResponse.json();
+        const summaryResult = await summaryResponse.json();
         
-        if (summaryData.success) {
+        if (summaryResult.success && summaryResult.data) {
+            summaryData = { summary: summaryResult.data }; // Wrap for compatibility
             updateOverviewStats(summaryData.summary);
+        } else {
+            console.error('Summary data missing:', summaryResult.error);
         }
         
         // Load full data

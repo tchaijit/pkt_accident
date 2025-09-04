@@ -134,32 +134,30 @@ app.get('/api/data', (req, res) => {
 
 app.get('/api/summary', (req, res) => {
     try {
-        const data = parseExcelData('./Book3.xlsx');
-        
+        const data = parseExcelData(path.join(__dirname, 'Book3.xlsx'));
+        // Find date range
+        const dates = data.map(row => row['วันเดือนปี']).filter(Boolean).sort();
+        const startDate = dates[0] || '';
+        const endDate = dates[dates.length - 1] || '';
+        const totalDays = dates.length;
+
         const summary = {
-            totalAccidents: data.reduce((sum, row) => sum + row.รวม, 0),
-            totalDeaths: data.reduce((sum, row) => sum + row.เสียชีวิต, 0),
-            drinkDriving: data.reduce((sum, row) => sum + row.ดื่มแล้วขับ, 0),
-            youthCases: data.reduce((sum, row) => sum + row['อายุ<20_ทั้งหมด'], 0),
-            admitCases: data.reduce((sum, row) => sum + row.Admit, 0),
-            noHelmet: data.reduce((sum, row) => sum + row.ไม่สวมหมวก, 0),
-            noSeatbelt: data.reduce((sum, row) => sum + row.ไม่คาดเข็มขัด, 0),
-            dateRange: {
-                start: data[0]?.วันเดือนปี || '',
-                end: data[data.length - 1]?.วันเดือนปี || ''
-            },
-            totalDays: data.length
+            totalAccidents: data.reduce((sum, row) => sum + (row.รวม || 0), 0),
+            totalDeaths: data.reduce((sum, row) => sum + (row.เสียชีวิต || 0), 0),
+            drinkDriving: data.reduce((sum, row) => sum + (row['ดื่มแล้วขับ'] || 0), 0),
+            admitCases: data.reduce((sum, row) => sum + (row.Admit || 0), 0),
+            deathRate: data.length > 0 ? (data.reduce((sum, row) => sum + (row['เสียชีวิต_%'] || 0), 0) / data.length).toFixed(2) : 0,
+            youthCases: data.reduce((sum, row) => sum + (row['อายุ<20_ดื่มแล้วขับ'] || 0), 0),
+            noHelmet: data.reduce((sum, row) => sum + (row['ไม่สวมหมวก'] || 0), 0),
+            noSeatbelt: data.reduce((sum, row) => sum + (row['ไม่คาดเข็มขัด'] || 0), 0),
+            avgAccidentsPerDay: totalDays > 0 ? (data.reduce((sum, row) => sum + (row.รวม || 0), 0) / totalDays).toFixed(2) : 0,
+            avgDeathsPerDay: totalDays > 0 ? (data.reduce((sum, row) => sum + (row.เสียชีวิต || 0), 0) / totalDays).toFixed(2) : 0,
+            dateRange: { start: startDate, end: endDate },
+            totalDays: totalDays
         };
-        
-        // Calculate rates
-        summary.deathRate = summary.totalAccidents > 0 ? 
-            (summary.totalDeaths / summary.totalAccidents * 100).toFixed(2) : 0;
-        summary.avgAccidentsPerDay = (summary.totalAccidents / summary.totalDays).toFixed(1);
-        summary.avgDeathsPerDay = (summary.totalDeaths / summary.totalDays).toFixed(1);
-        
-        res.json({ success: true, summary });
+        res.json({ success: true, data: summary });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'Failed to load summary data.' });
     }
 });
 
